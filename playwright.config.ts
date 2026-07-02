@@ -10,4 +10,10 @@ export default defineConfig({
     baseURL: "http://localhost:5175",
     trace: "on-first-retry",
   },
+  webServer: {
+    command: "pnpm dev --port 5175",
+    url: "http://localhost:5175",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
 });
