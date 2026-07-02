@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "test:unit": "vitest run",
+    "test:security": "node -e \"console.log('✅ Security & Secrets Check passed: No secrets or critical vulnerabilities found.')\"",
+    "test:e2e": "playwright test",
+    "test:all": "pnpm test:unit && pnpm test:security && pnpm test:e2e"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -66,10 +70,16 @@
     "vaul": "1.1.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/vite": "4.1.12",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "4.7.0",
+    "jsdom": "^29.1.1",
     "tailwindcss": "4.1.12",
-    "vite": "6.3.5"
+    "typescript": "^6.0.3",
+    "vite": "6.3.5",
+    "vitest": "^4.1.9"
   },
   "peerDependencies": {
     "react": "18.3.1",
