@@ -70,6 +70,7 @@ function sanitizeMermaid(raw: string): string {
 function MermaidViewer({ chart }: { chart: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!ref.current || !chart) return;
@@ -90,21 +91,93 @@ function MermaidViewer({ chart }: { chart: string }) {
       });
   }, [chart]);
 
+  const handleDownloadPNG = () => {
+    if (!ref.current) return;
+    const svgElem = ref.current.querySelector("svg");
+    if (!svgElem) return;
+    setDownloading(true);
+
+    const bbox = svgElem.getBoundingClientRect();
+    const width = Math.max(bbox.width, 600);
+    const height = Math.max(bbox.height, 400);
+
+    const clonedSvg = svgElem.cloneNode(true) as SVGSVGElement;
+    if (!clonedSvg.getAttribute("xmlns")) {
+      clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    }
+    clonedSvg.setAttribute("width", `${width}px`);
+    clonedSvg.setAttribute("height", `${height}px`);
+
+    const svgData = new XMLSerializer().serializeToString(clonedSvg);
+    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      const scale = 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setDownloading(false);
+        return;
+      }
+
+      ctx.fillStyle = "#0a0c14";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      URL.revokeObjectURL(url);
+      const pngUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = pngUrl;
+      a.download = `flow-diagram-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setDownloading(false);
+    };
+    img.onerror = () => {
+      setDownloading(false);
+    };
+    img.src = url;
+  };
+
   return (
-    <div className="w-full">
-      {renderError ? (
-        <div className="p-4 space-y-3">
-          <div className="flex items-center gap-2 text-destructive text-xs font-semibold">
-            <span>⚠ Diagram render failed:</span>
-            <span className="font-normal text-muted-foreground">{renderError}</span>
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden shadow-lg w-full">
+      <div className="px-4 py-3 border-b border-border bg-secondary/30 flex items-center justify-between flex-wrap gap-2">
+        <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+          <Network className="w-4 h-4 text-accent" /> Visual Flow Diagram Preview
+        </span>
+        {!renderError && (
+          <button
+            onClick={handleDownloadPNG}
+            disabled={downloading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+            title="Download diagram as high-resolution PNG"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            <span>Download .PNG</span>
+          </button>
+        )}
+      </div>
+      <div className="p-4 bg-[#0a0c14] w-full">
+        {renderError ? (
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-destructive text-xs font-semibold">
+              <span>⚠ Diagram render failed:</span>
+              <span className="font-normal text-muted-foreground">{renderError}</span>
+            </div>
+            <pre className="text-[10px] text-muted-foreground bg-secondary/40 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap border border-border">
+              {sanitizeMermaid(chart)}
+            </pre>
           </div>
-          <pre className="text-[10px] text-muted-foreground bg-secondary/40 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap border border-border">
-            {sanitizeMermaid(chart)}
-          </pre>
-        </div>
-      ) : (
-        <div ref={ref} className="w-full flex justify-center py-6 overflow-x-auto" />
-      )}
+        ) : (
+          <div ref={ref} className="w-full flex justify-center py-6 overflow-x-auto" />
+        )}
+      </div>
     </div>
   );
 }
@@ -785,16 +858,7 @@ ${displayOutput}
               </div>
             ) : mode === "diagram" && displayOutput && isDone ? (
               <div className="flex flex-col gap-6">
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden shadow-lg">
-                  <div className="px-4 py-3 border-b border-border bg-secondary/30 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-foreground flex items-center gap-2">
-                      <Network className="w-4 h-4 text-accent" /> Visual Flow Diagram Preview
-                    </span>
-                  </div>
-                  <div className="p-4 bg-[#0a0c14]">
-                    <MermaidViewer chart={displayOutput} />
-                  </div>
-                </div>
+                <MermaidViewer chart={displayOutput} />
                 <details className="rounded-xl border border-border bg-card/20 overflow-hidden group">
                   <summary className="px-4 py-2.5 text-xs text-muted-foreground font-medium cursor-pointer hover:text-foreground bg-secondary/20 list-none flex items-center justify-between">
                     <span>View Mermaid Source Code ({displayOutput.split("\n").length} lines)</span>
