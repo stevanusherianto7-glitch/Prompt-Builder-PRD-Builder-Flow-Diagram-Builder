@@ -277,6 +277,16 @@ export function GodModeBuilder() {
           framework: "Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Supabase / SQLite, PWA Offline-Capable"
         };
       }
+      if (k.includes("crypto") || k.includes("kripto") || k.includes("wallet") || k.includes("trading") || k.includes("bitcoin") || k.includes("web3") || k.includes("blockchain")) {
+        return {
+          role: "Principal Blockchain Architect & Senior Web3 Security Engineer",
+          tone: "Neon dark mode (Cyberpunk & Terminal aesthetic), glowing real-time price tickers, high-contrast interactive trading charts",
+          audience: "Crypto traders, Web3 investors, DeFi liquidity providers, and retail token holders",
+          objective: "Membangun platform ekosistem trading dan dompet kripto multichain yang aman, super cepat dengan eksekusi order real-time",
+          features: "- Multi-Chain Crypto Wallet: Integrasi Web3 dompet aman untuk Ethereum, Solana, dan Bitcoin\n- Real-Time Trading & Swap Engine: Grafik candlestick interaktif & eksekusi order instan (<100ms)\n- DeFi Portfolio & Yield Tracker: Pemantauan aset staking, LP pool, dan kalkulasi PnL otomatis\n- Smart Gas Alert & Security Guard: Proteksi anti-phishing/rugpull dan notifikasi gas fee optimal",
+          framework: "Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Wagmi / Viem / Ethers.js, Supabase RLS"
+        };
+      }
       return {
         role: "Lead Full-Stack Product Architect & AI Specialist",
         tone: "Sleek glassmorphic UI, vibrant gradients, highly responsive layout, accessible typography",
