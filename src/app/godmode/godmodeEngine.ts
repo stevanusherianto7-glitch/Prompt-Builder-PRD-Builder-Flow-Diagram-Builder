@@ -7,6 +7,7 @@ export interface GodModeInput {
   audience: string;
   tone: string;
   features: string;
+  framework?: string;
   mode: OutputMode;
   priorPrompt?: string;
   priorPRD?: string;
@@ -71,6 +72,7 @@ export function buildGodModePromptRequest(input: GodModeInput): string {
 - **Primary Objective:** ${input.objective}
 - **Target Audience:** ${input.audience}
 - **Design Aesthetic:** ${input.tone}
+- **Tech Stack & Libraries:** ${input.framework || "Modern production-grade frameworks & UI libraries"}
 - **Feature Requirements:**
 ${featureList || "  • Core functionality as specified in objective"}
 
@@ -118,6 +120,7 @@ export function buildGodModePRDRequest(input: GodModeInput, generatedPrompt?: st
 - **Core Objective:** ${input.objective}
 - **Primary Users:** ${input.audience}
 - **Design Language:** ${input.tone}
+- **Framework & Libraries:** ${input.framework || "Modern production-grade stack (Next.js/React/TypeScript/Tailwind CSS)"}
 - **Feature Scope:**
 ${featureList || "  • Core features derived from objective"}
 

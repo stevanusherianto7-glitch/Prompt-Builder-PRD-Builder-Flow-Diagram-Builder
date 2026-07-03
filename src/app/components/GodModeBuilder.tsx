@@ -2,14 +2,13 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Wand2, FileText, Network, Sparkles, Copy, RefreshCw,
   CheckCircle2, Loader2, AlertTriangle, ChevronRight,
-  Zap, Target, Shield, TrendingUp, Bot, X, RotateCcw
+  Zap, Target, Shield, TrendingUp, Bot, X, RotateCcw, Download
 } from "lucide-react";
 import mermaid from "mermaid";
 import { cn } from "./Status";
 import { useGodMode, PipelineStage } from "../hooks/useGodMode";
 import { OutputMode } from "../godmode/godmodeEngine";
 import { useApiKey } from "../hooks/useApiKey";
-import { ApiKeyPanel } from "./ApiKeyPanel";
 
 mermaid.initialize({ startOnLoad: false, theme: "dark", fontFamily: "Geist, sans-serif" });
 
@@ -163,6 +162,7 @@ export function GodModeBuilder() {
   const [audience, setAudience] = useState("");
   const [tone, setTone] = useState("");
   const [features, setFeatures] = useState("");
+  const [framework, setFramework] = useState("");
   const [copied, setCopied] = useState(false);
   const [showScore, setShowScore] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
@@ -207,7 +207,7 @@ export function GodModeBuilder() {
     }
   }, [isDone, finalOutput, mode]);
 
-  const performAutoFill = async (): Promise<{ role?: string; tone?: string; audience?: string; objective?: string; features?: string } | null> => {
+  const performAutoFill = async (): Promise<{ role?: string; tone?: string; audience?: string; objective?: string; features?: string; framework?: string } | null> => {
     if (!title.trim() || !hasKey) return null;
     setIsAutoFilling(true);
     try {
@@ -216,7 +216,8 @@ export function GodModeBuilder() {
 - "tone": UI/UX Aesthetic (e.g. "Modern dark theme, vibrant neon accents, glassmorphic cards, responsive mobile-first UI")
 - "audience": Target Audience (e.g. "Restaurant managers, HR directors, and frontline restaurant staff")
 - "objective": Objective (e.g. "Streamline attendance tracking with secure QR verification and real-time GPS validation to eliminate buddy punching and simplify payroll reporting")
-- "features": Features / Scope formatted as a bulleted string with "- Feature name: brief detail" (generate 4-5 core features)`;
+- "features": Features / Scope formatted as a bulleted string with "- Feature name: brief detail" (generate 4-5 core features)
+- "framework": Recommended Frameworks & Tech Stack (e.g. "Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Supabase / PostgreSQL, Lucide Icons, Framer Motion")`;
 
       const resText = await callGeminiJSON(prompt, "You are a professional software architect AI. Return only valid JSON object without markdown code blocks.");
       const clean = resText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
@@ -233,6 +234,7 @@ export function GodModeBuilder() {
       if (parsed.audience) setAudience(parsed.audience);
       if (parsed.objective) setObjective(parsed.objective);
       if (parsed.features) setFeatures(parsed.features);
+      if (parsed.framework) setFramework(parsed.framework);
       return parsed;
     } catch (err) {
       console.error("Auto-fill failed", err);
@@ -249,8 +251,9 @@ export function GodModeBuilder() {
     let currentAudience = audience;
     let currentObjective = objective;
     let currentFeatures = features;
+    let currentFramework = framework;
 
-    if (title.trim() && !currentRole && !currentTone && !currentAudience && !currentObjective) {
+    if (title.trim() && !currentRole && !currentTone && !currentAudience && !currentObjective && !currentFramework) {
       const res = await performAutoFill();
       if (res) {
         if (res.role) currentRole = res.role;
@@ -258,12 +261,31 @@ export function GodModeBuilder() {
         if (res.audience) currentAudience = res.audience;
         if (res.objective) currentObjective = res.objective;
         if (res.features) currentFeatures = res.features;
+        if (res.framework) currentFramework = res.framework;
       }
     }
 
     const priorPrompt = mode === "prd" || mode === "diagram" ? generatedPrompt : undefined;
     const priorPRD = mode === "diagram" ? generatedPRD : undefined;
-    run({ title, role: currentRole, objective: currentObjective, audience: currentAudience, tone: currentTone, features: currentFeatures, mode, priorPrompt, priorPRD });
+    run({ title, role: currentRole, objective: currentObjective, audience: currentAudience, tone: currentTone, features: currentFeatures, framework: currentFramework, mode, priorPrompt, priorPRD });
+  };
+
+  const handleFullReset = () => {
+    reset();
+    setTitle("");
+    setRole("");
+    setTone("");
+    setAudience("");
+    setObjective("");
+    setFeatures("");
+    setFramework("");
+    setCustomInstructions("");
+    setSystemComplexity("advanced");
+    setCustomNodes("");
+    setGeneratedPrompt("");
+    setGeneratedPRD("");
+    localStorage.removeItem("godmode_prior_prompt");
+    localStorage.removeItem("godmode_prior_prd");
   };
 
   const handleTabSwitch = (tabId: OutputMode) => {
@@ -275,6 +297,56 @@ export function GodModeBuilder() {
     navigator.clipboard.writeText(displayOutput);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadMarkdown = () => {
+    if (!displayOutput) return;
+
+    const modeLabel = mode === "prompt" ? "Prompt System" : mode === "prd" ? "PRD Document" : mode === "diagram" ? "Flow Diagram" : "Agent Spec";
+    const cleanTitle = title.trim() || "Untitled_Project";
+    const fileName = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "_")}_GodMode9500_${mode}.md`;
+
+    const formattedFeatures = features.trim()
+      ? features.split("\n").map(f => f.trim().startsWith("-") || f.trim().startsWith("•") ? f : `- ${f}`).join("\n")
+      : "- Core functionality derived from objective";
+
+    const markdownContent = `# ${cleanTitle} — God Mode Level 9500 (${modeLabel})
+
+> **Generated by PromptOps God Mode Level 9500**  
+> **Timestamp:** ${new Date().toLocaleString()}
+
+---
+
+## 📋 Project Configuration & Context
+
+| Parameter | Specification |
+| :--- | :--- |
+| **Project Title** | ${title || "N/A"} |
+| **Agent Persona** | ${role || "N/A"} |
+| **UI/UX Aesthetic** | ${tone || "N/A"} |
+| **Target Audience** | ${audience || "N/A"} |
+| **Framework & Library** | ${framework || "N/A"} |
+| **Core Objective** | ${objective || "N/A"} |
+
+### 🚀 Features & Scope
+${formattedFeatures}
+
+---
+
+## ⚡ Generated Specification (${modeLabel})
+
+${displayOutput}
+`;
+
+    const blob = new Blob([markdownContent], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const tabs: { id: OutputMode; label: string; icon: React.ReactNode }[] = [
@@ -319,6 +391,14 @@ export function GodModeBuilder() {
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
             <Zap className="w-3.5 h-3.5" /> GOD MODE 9500
           </div>
+
+          <button
+            onClick={handleFullReset}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-secondary text-secondary-foreground border border-border hover:bg-secondary/80 transition-colors shadow-sm"
+            title="Reset semua form input dan output untuk membuat prompt baru"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-accent" /> Restart / New Prompt
+          </button>
 
           {isStreaming ? (
             <button
@@ -402,14 +482,26 @@ export function GodModeBuilder() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Audience</label>
-              <input
-                type="text"
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-ring transition-all"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Target Audience</label>
+                <input
+                  type="text"
+                  value={audience}
+                  onChange={(e) => setAudience(e.target.value)}
+                  className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-ring transition-all"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Framework & Library</label>
+                <input
+                  type="text"
+                  value={framework}
+                  onChange={(e) => setFramework(e.target.value)}
+                  placeholder="e.g. Next.js, React, Tailwind CSS..."
+                  className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-ring transition-all"
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -498,36 +590,6 @@ export function GodModeBuilder() {
               </>
             )}
 
-            {/* API Key Panel */}
-            <ApiKeyPanel
-              apiKey={apiKey}
-              maskedKey={maskedKey}
-              hasKey={hasKey}
-              onSave={setApiKey}
-              onClear={clearApiKey}
-            />
-
-            {/* God Mode info */}
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold text-primary">God Mode Pipeline</span>
-              </div>
-              <div className="space-y-1.5 text-[11px] text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <span className="text-primary font-mono mt-0.5">01</span>
-                  <span>Generate using APEX system prompt (Level 9500)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-accent font-mono mt-0.5">02</span>
-                  <span>Score output across 10 quality dimensions (0–10000)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-chart-3 font-mono mt-0.5">03</span>
-                  <span>Auto-refine to reach Level 9500 if needed</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -567,9 +629,18 @@ export function GodModeBuilder() {
               </div>
               <div className="flex items-center gap-2">
                 {isDone && (
-                  <button onClick={reset} className="flex items-center gap-1.5 px-3 py-1 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary transition-colors">
-                    <RotateCcw className="w-3.5 h-3.5" /> New
-                  </button>
+                  <>
+                    <button
+                      onClick={handleDownloadMarkdown}
+                      className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors shadow-sm"
+                      title="Download lengkap dengan konfigurasi proyek (.md)"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download .md
+                    </button>
+                    <button onClick={handleFullReset} className="flex items-center gap-1.5 px-3 py-1 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-secondary transition-colors" title="Buat Prompt Baru">
+                      <RotateCcw className="w-3.5 h-3.5" /> New Prompt
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={handleCopy}
