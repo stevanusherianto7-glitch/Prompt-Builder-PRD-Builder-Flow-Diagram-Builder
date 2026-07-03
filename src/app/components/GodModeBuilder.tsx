@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Wand2, FileText, Network, Sparkles, Copy, RefreshCw,
   CheckCircle2, Loader2, AlertTriangle, ChevronRight,
-  Zap, Target, Shield, TrendingUp, Bot, X, RotateCcw, ZoomIn
+  Zap, Target, Shield, TrendingUp, Bot, X, RotateCcw, ZoomIn, Download
 } from "lucide-react";
 import mermaid from "mermaid";
 import { cn } from "./Status";
