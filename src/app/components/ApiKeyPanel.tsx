@@ -56,17 +56,17 @@ export function ApiKeyPanel({
       <div className="px-3.5 py-3 flex flex-col gap-2.5">
         {/* Provider Selector Dropdown */}
         {onProviderChange && (
-          <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2.5">
-            <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex flex-col gap-1.5 border-b border-border/60 pb-2.5">
+            <div className="flex items-center gap-1.5">
               <Key className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-              <span className="text-[10.5px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+              <span className="text-[10.5px] font-bold text-muted-foreground uppercase tracking-wider">
                 AI Provider
               </span>
             </div>
             <select
               value={providerId}
               onChange={(e) => onProviderChange(e.target.value as ApiProviderId)}
-              className="bg-secondary hover:bg-secondary/80 border border-border text-foreground text-[11px] font-medium rounded-md px-2 py-1 outline-none focus:border-primary transition-colors cursor-pointer"
+              className="w-full bg-secondary hover:bg-secondary/80 border border-border text-foreground text-[11px] font-medium rounded-md px-2.5 py-1.5 outline-none focus:border-primary transition-colors cursor-pointer"
             >
               <option value="gemini">Google Gemini</option>
               <option value="claude">Anthropic Claude</option>
