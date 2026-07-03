@@ -208,10 +208,34 @@ export function GodModeBuilder() {
   }, [isDone, finalOutput, mode]);
 
   const performAutoFill = async (): Promise<{ role?: string; tone?: string; audience?: string; objective?: string; features?: string; framework?: string } | null> => {
-    if (!title.trim() || !hasKey) return null;
+    if (!title.trim()) return null;
     setIsAutoFilling(true);
+
+    const getSmartAutoFill = (t: string) => {
+      const k = t.toLowerCase();
+      if (k.includes("warung") || k.includes("sembako") || k.includes("toko") || k.includes("kasir") || k.includes("pos")) {
+        return {
+          role: "Senior POS & Retail Inventory Architect",
+          tone: "Modern dark theme, clean typography, high contrast buttons suitable for fast cashier scanning and responsive mobile access",
+          audience: "Pemilik warung sembako, kasir toko kelontong, dan supplier distributor barang",
+          objective: "Mendigitalisasi manajemen stok barang sembako, pencatatan kasbon/hutang pelanggan, serta kasir POS harian secara real-time dan mudah digunakan",
+          features: "- Kasir POS Cepat: Scan barcode barang & hitung kembalian instan\n- Buku Kasbon Digital: Pencatatan hutang pelanggan dengan pengingat jatuh tempo\n- Peringatan Stok Menipis: Notifikasi otomatis saat beras, minyak goreng, atau gula hampir habis\n- Laporan Laba Harian: Grafik keuntungan bersih dan arus kas warung secara real-time",
+          framework: "Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Supabase / SQLite, PWA Offline-Capable"
+        };
+      }
+      return {
+        role: "Lead Full-Stack Product Architect & AI Specialist",
+        tone: "Sleek glassmorphic UI, vibrant gradients, highly responsive layout, accessible typography",
+        audience: "Target enterprise users, managers, and everyday consumers seeking intuitive workflows",
+        objective: `To build an end-to-end scalable and robust software platform solving core user challenges in ${t}`,
+        features: `- Real-time Dashboard: Complete analytics & progress tracking\n- Automated Workflow Pipeline: Streamlined operations with minimal manual effort\n- Multi-platform Sync: Cloud database integration with offline fallback\n- Role-based Access Control: Secure authentication and custom permissions`,
+        framework: "Next.js 15, React 19, Tailwind CSS, TypeScript, Supabase, Framer Motion"
+      };
+    };
+
     try {
-      const prompt = `Based on the following app idea: "${title}", infer and generate optimal professional values for a software specification builder. Return ONLY a JSON object with these exact string keys:
+      if (hasKey) {
+        const prompt = `Based on the following app idea: "${title}", infer and generate optimal professional values for a software specification builder. Return ONLY a JSON object with these exact string keys:
 - "role": Agent Persona (e.g. "Senior Full-Stack Architect & Mobile UX Specialist")
 - "tone": UI/UX Aesthetic (e.g. "Modern dark theme, vibrant neon accents, glassmorphic cards, responsive mobile-first UI")
 - "audience": Target Audience (e.g. "Restaurant managers, HR directors, and frontline restaurant staff")
@@ -219,26 +243,45 @@ export function GodModeBuilder() {
 - "features": Features / Scope formatted as a bulleted string with "- Feature name: brief detail" (generate 4-5 core features)
 - "framework": Recommended Frameworks & Tech Stack (e.g. "Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Supabase / PostgreSQL, Lucide Icons, Framer Motion")`;
 
-      const resText = await callGeminiJSON(prompt, "You are a professional software architect AI. Return only valid JSON object without markdown code blocks.");
-      const clean = resText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
-      let parsed;
-      try {
-        parsed = JSON.parse(clean);
-      } catch {
-        const match = resText.match(/\{[\s\S]*\}/);
-        if (match) parsed = JSON.parse(match[0]);
-        else throw new Error("Format JSON tidak valid");
+        const resText = await callGeminiJSON(prompt, "You are a professional software architect AI. Return only valid JSON object without markdown code blocks.");
+        const clean = resText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+        let parsed;
+        try {
+          parsed = JSON.parse(clean);
+        } catch {
+          const match = resText.match(/\{[\s\S]*\}/);
+          if (match) parsed = JSON.parse(match[0]);
+          else throw new Error("Format JSON tidak valid");
+        }
+        if (parsed.role) setRole(parsed.role);
+        if (parsed.tone) setTone(parsed.tone);
+        if (parsed.audience) setAudience(parsed.audience);
+        if (parsed.objective) setObjective(parsed.objective);
+        if (parsed.features) setFeatures(parsed.features);
+        if (parsed.framework) setFramework(parsed.framework);
+        return parsed;
+      } else {
+        // Fallback smart local auto-fill jika API key belum dimasukkan
+        await new Promise((r) => setTimeout(r, 600)); // smooth simulation
+        const fallback = getSmartAutoFill(title);
+        setRole(fallback.role);
+        setTone(fallback.tone);
+        setAudience(fallback.audience);
+        setObjective(fallback.objective);
+        setFeatures(fallback.features);
+        setFramework(fallback.framework);
+        return fallback;
       }
-      if (parsed.role) setRole(parsed.role);
-      if (parsed.tone) setTone(parsed.tone);
-      if (parsed.audience) setAudience(parsed.audience);
-      if (parsed.objective) setObjective(parsed.objective);
-      if (parsed.features) setFeatures(parsed.features);
-      if (parsed.framework) setFramework(parsed.framework);
-      return parsed;
     } catch (err) {
-      console.error("Auto-fill failed", err);
-      return null;
+      console.error("API Auto-fill failed, using smart local fallback", err);
+      const fallback = getSmartAutoFill(title);
+      setRole(fallback.role);
+      setTone(fallback.tone);
+      setAudience(fallback.audience);
+      setObjective(fallback.objective);
+      setFeatures(fallback.features);
+      setFramework(fallback.framework);
+      return fallback;
     } finally {
       setIsAutoFilling(false);
     }
@@ -442,7 +485,7 @@ ${displayOutput}
                     <span className="text-[10px] text-muted-foreground font-medium">DESCRIBE YOUR IDEA</span>
                     <button
                       onClick={performAutoFill}
-                      disabled={!title.trim() || !hasKey || isAutoFilling}
+                      disabled={!title.trim() || isAutoFilling}
                       type="button"
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-accent/10 hover:bg-accent/20 border border-accent/20 text-[11px] font-semibold text-accent transition-all disabled:opacity-40"
                     >
