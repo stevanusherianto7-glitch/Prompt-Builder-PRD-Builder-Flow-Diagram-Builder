@@ -211,16 +211,46 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
 - [ ] Build core UI components for ${input.title} following modern aesthetic guidelines
 - [ ] Implement end-to-end integration tests ensuring acceptance criteria pass`;
         } else {
+          const appName = input.title || "Application";
+          const featLines = (input.features || "Authentication\nDashboard Hub\nCore Processing")
+            .split("\n")
+            .map((f) => f.replace(/^[-•*]\s*/, "").trim())
+            .filter(Boolean);
+
+          const f1 = featLines[0] || "Auth & Security Module";
+          const f2 = featLines[1] || "Dashboard & Real-time Analytics";
+          const f3 = featLines[2] || "Core Transaction & Pipeline Engine";
+          const f4 = featLines[3] || "Cloud Database & Storage Sync";
+
           generatedText = `graph TD
-    A[User / Kasir POS] -->|Login & Auth| B(API Gateway / Next.js Middleware)
-    B -->|Check Role| C{Authorized?}
-    C -->|Yes| D[Dashboard & POS Scanner]
-    C -->|No| E[Redirect Login]
-    D -->|Scan Barcode| F[(Supabase Inventory DB)]
-    F -->|Check Stock| G{Stock Available?}
-    G -->|Yes| H[Process Transaction & Print Receipt]
-    G -->|No| I[Trigger Low Stock Alert]
-    H --> J[Update Daily Ledger & Profit Chart]`;
+    START(["User Access / Open ${appName}"]) --> AUTH["Login / Auth Middleware"]
+    AUTH --> CHECK_ROLE{"Authorized?"}
+    CHECK_ROLE -->|"No"| REDIRECT["Redirect to Login / Error Alert"]
+    CHECK_ROLE -->|"Yes"| HUB["${appName} Main Dashboard Hub"]
+
+    subgraph Core Functional Modules
+        HUB --> F1["Module 1: ${f1}"]
+        HUB --> F2["Module 2: ${f2}"]
+        HUB --> F3["Module 3: ${f3}"]
+    end
+
+    F1 --> VALIDATE{"Validate Security / Integrity?"}
+    VALIDATE -->|"Invalid"| ERR["Trigger Security & Error Alert"]
+    VALIDATE -->|"Valid"| DB[("Save to Database & ${f4}")]
+
+    F2 --> DB
+    F3 --> DB
+
+    DB --> SYNC["Update Real-time State & Analytics"]
+    SYNC --> FINISH(["Workflow Completed Successfully ✓"])
+
+    classDef actor fill:#ADD8E6,stroke:#333,stroke-width:2px
+    classDef decision fill:#F08080,stroke:#333,stroke-width:2px
+    classDef database fill:#B0C4DE,stroke:#333,stroke-width:2px
+    classDef terminal fill:#90EE90,stroke:#333,stroke-width:2px
+    class START,FINISH terminal
+    class CHECK_ROLE,VALIDATE decision
+    class DB database`;
         }
 
         updateStage(0, { status: "running", detail: "Synthesizing response..." });
