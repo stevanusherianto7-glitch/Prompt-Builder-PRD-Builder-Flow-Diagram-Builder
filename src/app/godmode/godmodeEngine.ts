@@ -80,30 +80,30 @@ ${featureList || "  • Core functionality as specified in objective"}
 
 - **CRITICAL FORMAT CONSTRAINT:** Do NOT use JSON, object arrays, JSON-like key-value pairs, or JSON code blocks in any section of the generated prompt. All sections (including Execution Protocol, Constraint Matrix, and Self-Verification Loop) must be written in human-readable plain text or standard Markdown (using headings, paragraphs, numbered/bulleted lists). No JSON formatting is allowed.
 
-Produce a God Mode Level 9500 system prompt with ALL of these sections:
+Produce a God Mode Level 9500 system prompt internalizing industry best practices (dair-ai/Prompt-Engineering-Guide & f/awesome-chatgpt-prompts) with ALL of these sections:
 
-**[SECTION 1: ROLE & COGNITIVE PROFILE]**
-Define the agent with calibrated expertise. Specify the exact mental models it must apply, its epistemic constraints (what it knows vs. what it must not guess), and its decision-making hierarchy when requirements conflict.
+**[SECTION 1: ROLE & COGNITIVE ARCHITECTURE (Ref: awesome-chatgpt-prompts)]**
+Define an elite specialist persona. Specify domain authority, epistemic constraints (what it knows vs. what it must verify), decision-making hierarchy, and specialized technical vocabulary.
 
-**[SECTION 2: OBJECTIVE DECOMPOSITION]**
-Break the primary objective into atomic sub-tasks. Map sequential dependencies explicitly. Define entry criteria for each phase and exit validation gates.
+**[SECTION 2: CHAIN-OF-THOUGHT & REASONING PROTOCOL (Ref: dair-ai/Prompt-Engineering-Guide)]**
+Break the primary objective into atomic sub-tasks. Embed explicit scientific reasoning directives (e.g. step-by-step Chain-of-Thought reasoning, Self-Consistency checks, and Tree-of-Thoughts exploration before code generation).
 
-**[SECTION 3: EXECUTION PROTOCOL]**
-Numbered, non-negotiable workflow. Each step has: trigger, action, output, and validation. Include decision branches for edge cases.
+**[SECTION 3: EXECUTION WORKFLOW & DECISION GATES]**
+Numbered, non-negotiable workflow. Each step has: trigger, action, output, and validation. Include explicit fallback branches for edge cases.
 
-**[SECTION 4: CONSTRAINT MATRIX]**
+**[SECTION 4: CONSTRAINT MATRIX & INVARIANTS]**
 Behavioral invariants as logical rules. Format: IF [condition] THEN [action] ELSE [fallback]. Include 5+ anti-patterns with explicit prohibition rationale.
 
-**[SECTION 5: OUTPUT CONTRACT]**
-Exact output format specification. Define: structure, token budget per section, ordering, encoding rules, and a machine-readable termination marker.
+**[SECTION 5: FEW-SHOT CALIBRATION EXEMPLARS (Ref: dair-ai)]**
+Provide high-signal few-shot examples bounding the solution space: one ideal high-complexity implementation, and one edge-case resolution.
 
-**[SECTION 6: CALIBRATION EXAMPLES]**
-Two minimal examples bounding the solution space: one ideal case, one edge case. Each with annotated reasoning.
+**[SECTION 6: OUTPUT CONTRACT & TERMINATION MARKERS]**
+Exact output format specification. Define: structure, token efficiency, ordering, encoding rules, and a clear machine-readable completion gate.
 
 **[SECTION 7: SELF-VERIFICATION LOOP]**
-A checklist the agent runs before finalizing output. Binary pass/fail criteria. Non-negotiable gates.
+A rigorous binary checklist the agent runs before finalizing output. Non-negotiable quality gates.
 
-This prompt must eliminate all ambiguity. God Mode Level 9500 means: any AI model reading this knows EXACTLY what to build, how to build it, and how to verify it's correct.`;
+This prompt must eliminate all ambiguity. God Mode Level 9500 means: any autonomous AI agent reading this knows EXACTLY how to reason, what to build, and how to verify it's 100% correct.`;
 }
 
 export function buildGodModePRDRequest(input: GodModeInput, generatedPrompt?: string): string {
@@ -126,32 +126,36 @@ ${featureList || "  • Core features derived from objective"}
 
 ### Generation Directive
 
-- **CRITICAL FORMAT CONSTRAINT:** Do NOT use JSON, object arrays, JSON-like key-value pairs, or JSON code blocks in any section of the generated PRD. All sections (including Atomic Feature Specifications, Technical Architecture Contract, and Risk Intelligence Matrix) must be written in human-readable plain text or standard Markdown (using headings, paragraphs, numbered/bulleted lists). No JSON formatting is allowed.
+- **CRITICAL FORMAT CONSTRAINT:** Do NOT use JSON, object arrays, JSON-like key-value pairs, or JSON code blocks in any section of the generated PRD. All sections must be written in human-readable plain text or structured Markdown (headings, paragraphs, bulleted/checkbox lists). No JSON formatting is allowed.
 
-Generate a God Mode Level 9500 PRD structured for AI agent execution. Include ALL sections:
+Generate a God Mode Level 9500 PRD structured specifically for AI agent execution (internalizing christerjohansson/ai-product-requirement-document & github/awesome-copilot breakdown-feature-prd). Include ALL sections:
 
-**[SECTION 1: EXECUTIVE INTELLIGENCE]**
-A single paragraph synthesizing: problem space, solution hypothesis, target user's mental model, and measurable definition of success. Include 3+ implicit requirements the brief doesn't state but any expert would include.
+**[SECTION 1: EXECUTIVE INTELLIGENCE & BUSINESS VISION]**
+A comprehensive synthesis of the problem space, solution hypothesis, target user's mental model, and measurable KPIs/definition of success. Include 3+ implicit architectural requirements.
 
-**[SECTION 2: USER COGNITIVE MAP]**
-Model the primary user's workflow: pre-usage mental state, key decision points, cognitive shortcuts used, failure states that cause abandonment, and behavioral signals indicating success.
+**[SECTION 2: USER COGNITIVE MAP & WORKFLOW]**
+Model the primary user journey: pre-usage mental state, key decision points, cognitive shortcuts, error recovery states, and behavioral success criteria.
 
-**[SECTION 3: ATOMIC FEATURE SPECIFICATIONS]**
-For EACH feature: trigger condition, expected behavior, 3+ edge cases per feature, performance SLA (latency, error rate), and binary acceptance test.
+**[SECTION 3: ATOMIC FEATURE SPECIFICATIONS (Ref: awesome-copilot breakdown-feature-prd)]**
+For EACH feature, strictly define:
+- **User Story:** Explicitly format as \`As a [role], I want [action], so that [benefit]\`.
+- **Trigger & Expected Behavior:** Exact system mechanics.
+- **Edge Cases:** 3+ explicit edge cases & error handling rules per feature.
+- **Strict Acceptance Criteria:** Formulated using rigorous verification or Given/When/Then conditions.
 
 **[SECTION 4: TECHNICAL ARCHITECTURE CONTRACT]**
-Component hierarchy with TypeScript interfaces. State management strategy. Data flow diagram (text). API surface area. Error handling protocol. Performance budget.
+Component hierarchy with TypeScript interfaces. State management strategy. Data flow diagram description. API surface area. Performance SLA (<1.2s FCP, 99.9% uptime).
 
-**[SECTION 5: RISK INTELLIGENCE MATRIX]**
-For each major risk: probability estimate, severity (1-5), detection method, mitigation strategy, and contingency plan.
+**[SECTION 5: RISK INTELLIGENCE & MITIGATION MATRIX]**
+Major technical and business risks: probability estimate, severity (1-5), detection method, mitigation strategy, and automated contingency plan.
 
-**[SECTION 6: AGENT EXECUTION CHECKLIST]**
-Sequential, verifiable checklist an AI agent uses to confirm requirements are met before delivery. Every item must be binary (pass/fail).
+**[SECTION 6: AGENT EXECUTABLE TASK BREAKDOWN CHECKLIST (Ref: christerjohansson)]**
+Format as an actionable Markdown TODO list (\`- [ ] Task description\`) organized logically by dependency layer (Database/Auth → Backend API → Frontend Components → Verification). Designed so autonomous AI coding agents (Cursor/Claude/Antigravity) can execute step-by-step.
 
 **[SECTION 7: ANTI-PATTERN REGISTRY]**
-Common implementation mistakes for this type of product. Each with: description, why it fails, and the correct approach.
+Common implementation mistakes for this product domain. Each with: description, why it fails, and the exact architectural solution.
 
-God Mode Level 9500 PRD: every clause measurable, every requirement binary, every ambiguity eliminated. Structure for machine execution, not human approval.`;
+God Mode Level 9500 PRD: every clause measurable, every user story actionable, every acceptance criteria rigorous. Structured for direct machine execution.`;
 
   if (generatedPrompt) {
     prompt += `

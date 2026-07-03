@@ -152,51 +152,64 @@ export function useGodMode(apiKey: string) {
         let generatedText = "";
         if (input.mode === "prompt") {
           generatedText = `# GOD MODE LEVEL 9500 SYSTEM PROMPT
-## APEX ARCHITECTURE · PRODUCTION SPECIFICATION
+## APEX ARCHITECTURE · INTERNALIZED INDUSTRY STANDARDS (dair-ai & awesome-chatgpt-prompts)
 
-You are **${input.role || "Senior Full-Stack Product Architect"}**, operating with zero hallucination and maximum engineering precision.
+### 1. ROLE & SPECIALIST PERSONA (Ref: awesome-chatgpt-prompts)
+You are **${input.role || "Senior Full-Stack Product Architect"}**, an elite domain specialist operating with zero hallucination and maximum engineering precision. Adopt the authoritative mental model, strict quality gates, and specialized terminology of this persona.
 
-### 1. CORE OBJECTIVE
+### 2. CORE OBJECTIVE & MISSION
 ${input.objective || `Build a highly scalable, robust platform for: ${input.title}`}
-
-### 2. TARGET AUDIENCE & TONE
-- **Audience:** ${input.audience || "Target users, administrators, and enterprise operators"}
+- **Target Users:** ${input.audience || "Target users, administrators, and enterprise operators"}
 - **UI/UX Aesthetic:** ${input.tone || "Modern dark mode, accessible contrast, responsive layout"}
 
-### 3. TECH STACK & FRAMEWORK INVARIANTS
+### 3. TECH STACK & ARCHITECTURAL INVARIANTS
 Must strictly adhere to: **${input.framework || "Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Supabase"}**.
 No deprecated libraries. No ad-hoc utility styling without design system tokens.
 
-### 4. ARCHITECTURAL SCOPE & FEATURES
-${input.features || "- Core POS & Inventory\n- Real-time Dashboard\n- Automated Alerts & Analytics"}
+### 4. ATOMIC FEATURE SPECIFICATIONS
+${input.features || "- Core POS & Inventory Management\n- Real-time Transaction Dashboard\n- Automated Low-Stock Alerts & Profit Analytics"}
 
-### 5. CHAIN-OF-THOUGHT EXECUTION PROTOCOL
-1. Analyze domain entities and database schema constraints first.
-2. Structure modular React components with strict type definitions.
-3. Handle error boundaries, edge cases, and loading states systematically.
+### 5. SCIENTIFIC CHAIN-OF-THOUGHT PROTOCOL (Ref: dair-ai/Prompt-Engineering-Guide)
+To ensure absolute reliability, execute sequential reasoning steps before generating output:
+1. **Domain & Schema Decomposition:** Establish exact data models and RLS database policies first.
+2. **Modular Component Architecture:** Design atomic, strictly typed React 19 components.
+3. **Self-Consistency & Error Handling:** Verify edge cases, loading spinners, and error boundaries systematically.
 
-**ENFORCEMENT:** Output only production-ready, clean, modular code with complete error handling.`;
+**ENFORCEMENT:** Output only production-ready, clean, verified code. Zero placeholder stubs.`;
         } else if (input.mode === "prd") {
-          generatedText = `# PRODUCT REQUIREMENTS DOCUMENT (PRD) · GOD MODE 9500
-## PROJECT: ${input.title.toUpperCase()}
+          generatedText = `# AI-EXECUTABLE PRODUCT REQUIREMENTS DOCUMENT (PRD) · GOD MODE 9500
+## PROJECT: ${input.title.toUpperCase()} (Ref: christerjohansson & awesome-copilot standards)
 
-### 1. EXECUTIVE SUMMARY & VISION
-**Persona:** ${input.role || "Lead Product Manager & Architect"}
+### 1. EXECUTIVE VISION & BUSINESS INTELLIGENCE
+**Persona:** ${input.role || "Lead Product Manager & Principal Architect"}
 **Target Audience:** ${input.audience || "General users and retail operators"}
 **Primary Goal:** ${input.objective || "Deliver seamless digital experience and operational efficiency"}
 
 ### 2. TECHNICAL ARCHITECTURE & STACK
-* **Frontend / Backend:** ${input.framework || "Next.js 15, React 19, TypeScript, Tailwind CSS"}
-* **Database / Storage:** PostgreSQL / Supabase with row-level security (RLS)
-* **Design System:** ${input.tone || "Modern dark theme with glassmorphism and high usability"}
+* **Frontend / Backend:** ${input.framework || "Next.js 15 App Router, React 19, TypeScript, Tailwind CSS"}
+* **Database / Security:** PostgreSQL / Supabase with Row-Level Security (RLS) & JWT Auth
+* **Design System:** ${input.tone || "Modern dark theme with glassmorphism and high contrast usability"}
 
-### 3. CORE FUNCTIONAL SPECIFICATIONS
-${input.features || "- User Management & Role Authentication\n- Real-time Transaction Processing\n- Advanced Reporting & Analytics"}
+### 3. FEATURE SPECIFICATIONS (User Stories & Acceptance Criteria Ref: awesome-copilot)
+${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba Harian")
+  .split("\n")
+  .filter(Boolean)
+  .map((feat) => {
+    const cleanFeat = feat.replace(/^[-•*]\s*/, "").trim();
+    return `#### Feature: ${cleanFeat}
+- **User Story:** As a ${input.audience ? input.audience.split(",")[0] : "user"}, I want to use ${cleanFeat}, so that operational workflow is streamlined.
+- **Acceptance Criteria:** Given valid input data, when the action is triggered, then the system updates state real-time with latency < 500ms.`;
+  }).join("\n\n")}
 
-### 4. NON-FUNCTIONAL REQUIREMENTS & METRICS
+### 4. NON-FUNCTIONAL SLA & METRICS
 * **Performance:** First Contentful Paint (FCP) < 1.2s, Lighthouse Score > 95.
-* **Reliability:** 99.9% uptime with automated backup and fallback mechanisms.
-* **Security:** End-to-end encryption, secure session tokens, strict input validation.`;
+* **Reliability & Offline:** 99.9% uptime with PWA service worker background synchronization.
+
+### 5. AGENT EXECUTABLE TASK CHECKLIST [ ] (Ref: christerjohansson)
+- [ ] Initialize Next.js 15 TypeScript project with Tailwind CSS & design tokens
+- [ ] Setup Supabase schema, database migrations, and Row-Level Security policies
+- [ ] Build core UI components for ${input.title} following modern aesthetic guidelines
+- [ ] Implement end-to-end integration tests ensuring acceptance criteria pass`;
         } else {
           generatedText = `graph TD
     A[User / Kasir POS] -->|Login & Auth| B(API Gateway / Next.js Middleware)
