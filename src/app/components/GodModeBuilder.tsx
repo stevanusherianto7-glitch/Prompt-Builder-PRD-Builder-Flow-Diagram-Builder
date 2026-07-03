@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Wand2, FileText, Network, Sparkles, Copy, RefreshCw,
   CheckCircle2, Loader2, AlertTriangle, ChevronRight,
-  Zap, Target, Shield, TrendingUp, Bot, X, RotateCcw, Download
+  Zap, Target, Shield, TrendingUp, Bot, X, RotateCcw, ZoomIn
 } from "lucide-react";
 import mermaid from "mermaid";
 import { cn } from "./Status";
@@ -70,11 +70,12 @@ function sanitizeMermaid(raw: string): string {
 function MermaidViewer({ chart }: { chart: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
 
   useEffect(() => {
     if (!ref.current || !chart) return;
     setRenderError(null);
+    setZoomLevel(1);
     const clean = sanitizeMermaid(chart);
     const id = "m" + Math.random().toString(36).slice(2, 9);
     mermaid.render(id, clean)
@@ -91,58 +92,15 @@ function MermaidViewer({ chart }: { chart: string }) {
       });
   }, [chart]);
 
-  const handleDownloadPNG = () => {
-    if (!ref.current) return;
-    const svgElem = ref.current.querySelector("svg");
-    if (!svgElem) return;
-    setDownloading(true);
-
-    const bbox = svgElem.getBoundingClientRect();
-    const width = Math.max(bbox.width, 600);
-    const height = Math.max(bbox.height, 400);
-
-    const clonedSvg = svgElem.cloneNode(true) as SVGSVGElement;
-    if (!clonedSvg.getAttribute("xmlns")) {
-      clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const handleDiagramClick = () => {
+    if (renderError) return;
+    if (zoomLevel === 1) {
+      setZoomLevel(1.5);
+    } else if (zoomLevel === 1.5) {
+      setZoomLevel(2.2);
+    } else {
+      setZoomLevel(1);
     }
-    clonedSvg.setAttribute("width", `${width}px`);
-    clonedSvg.setAttribute("height", `${height}px`);
-
-    const svgData = new XMLSerializer().serializeToString(clonedSvg);
-    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-
-    const img = new Image();
-    img.onload = () => {
-      const scale = 2;
-      const canvas = document.createElement("canvas");
-      canvas.width = width * scale;
-      canvas.height = height * scale;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        setDownloading(false);
-        return;
-      }
-
-      ctx.fillStyle = "#0a0c14";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, 0, 0, width, height);
-
-      URL.revokeObjectURL(url);
-      const pngUrl = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = pngUrl;
-      a.download = `flow-diagram-${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setDownloading(false);
-    };
-    img.onerror = () => {
-      setDownloading(false);
-    };
-    img.src = url;
   };
 
   return (
@@ -152,18 +110,33 @@ function MermaidViewer({ chart }: { chart: string }) {
           <Network className="w-4 h-4 text-accent" /> Visual Flow Diagram Preview
         </span>
         {!renderError && (
-          <button
-            onClick={handleDownloadPNG}
-            disabled={downloading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
-            title="Download diagram as high-resolution PNG"
-          >
-            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            <span>Download .PNG</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <div
+              onClick={handleDiagramClick}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-primary/10 border border-primary/20 text-xs text-primary hover:bg-primary/20 transition-all cursor-pointer select-none font-medium"
+              title="Klik diagram atau tombol ini untuk Auto-Zoom"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+              <span>Zoom: <strong>{Math.round(zoomLevel * 100)}%</strong></span>
+              <span className="opacity-75 text-[10px] ml-1">(Klik diagram utk Zoom / Screenshot)</span>
+            </div>
+            {zoomLevel !== 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setZoomLevel(1); }}
+                className="px-2.5 py-1 rounded-md bg-secondary hover:bg-secondary/80 text-foreground text-xs font-medium transition-colors border border-border"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         )}
       </div>
-      <div className="p-4 bg-[#0a0c14] w-full">
+      <div
+        onClick={handleDiagramClick}
+        className="p-6 bg-[#0a0c14] w-full overflow-auto transition-colors hover:bg-[#0c0e18] cursor-zoom-in"
+        style={{ cursor: zoomLevel >= 2.2 ? "zoom-out" : "zoom-in" }}
+        title="Klik untuk Auto-Zoom agar mudah di-screenshot"
+      >
         {renderError ? (
           <div className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-destructive text-xs font-semibold">
@@ -175,7 +148,15 @@ function MermaidViewer({ chart }: { chart: string }) {
             </pre>
           </div>
         ) : (
-          <div ref={ref} className="w-full flex justify-center py-6 overflow-x-auto" />
+          <div
+            ref={ref}
+            style={{
+              transform: `scale(${zoomLevel})`,
+              transformOrigin: "top center",
+              transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+            className="w-full flex justify-center py-6"
+          />
         )}
       </div>
     </div>
