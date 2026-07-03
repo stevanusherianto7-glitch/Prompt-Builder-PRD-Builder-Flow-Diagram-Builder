@@ -207,7 +207,8 @@ export function useGodMode(apiKey: string) {
 
         let scoreResult: ScoringResult | null = null;
         try {
-          const match = scoreRaw.match(/\{[\s\S]*\}/);
+          const cleanedRaw = scoreRaw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+          const match = cleanedRaw.match(/\{[\s\S]*\}/);
           if (!match) throw new Error("No JSON object found");
           scoreResult = JSON.parse(match[0]) as ScoringResult;
           setScoreData(scoreResult);

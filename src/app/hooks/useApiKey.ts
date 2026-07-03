@@ -24,7 +24,7 @@ export function useApiKey() {
 
   const hasKey = apiKey.length > 0;
   const maskedKey = apiKey
-    ? `sk-ant-...${apiKey.slice(-6)}`
+    ? `AIza...${apiKey.slice(-4)}`
     : "";
 
   return { apiKey, setApiKey, clearApiKey, hasKey, maskedKey };

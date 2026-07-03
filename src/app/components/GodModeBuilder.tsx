@@ -220,7 +220,14 @@ export function GodModeBuilder() {
 
       const resText = await callGeminiJSON(prompt, "You are a professional software architect AI. Return only valid JSON object without markdown code blocks.");
       const clean = resText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
-      const parsed = JSON.parse(clean);
+      let parsed;
+      try {
+        parsed = JSON.parse(clean);
+      } catch {
+        const match = resText.match(/\{[\s\S]*\}/);
+        if (match) parsed = JSON.parse(match[0]);
+        else throw new Error("Format JSON tidak valid");
+      }
       if (parsed.role) setRole(parsed.role);
       if (parsed.tone) setTone(parsed.tone);
       if (parsed.audience) setAudience(parsed.audience);
@@ -656,7 +663,7 @@ export function GodModeBuilder() {
                 <div>
                   <p className="text-sm font-medium text-destructive">Generation failed</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm">{error}</p>
-                  <p className="text-xs text-muted-foreground mt-2 opacity-60">Make sure your Anthropic API key is valid in the request headers</p>
+                  <p className="text-xs text-muted-foreground mt-2 opacity-60">Pastikan Google Gemini API key Anda valid dan aktif di panel kanan</p>
                 </div>
                 <button onClick={reset} className="px-4 py-2 text-xs rounded-md bg-secondary border border-border hover:bg-secondary/80 transition-colors">
                   Try again

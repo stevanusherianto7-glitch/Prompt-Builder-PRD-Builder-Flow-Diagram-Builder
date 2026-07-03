@@ -22,7 +22,7 @@ export function Dashboard() {
       <div className="max-w-5xl mx-auto w-full flex flex-col gap-8">
         <div>
           <h1 className="text-2xl font-bold mb-1">PromptOps Dashboard</h1>
-          <p className="text-sm text-muted-foreground">God Mode Level 9500 · Anthropic claude-sonnet-4-6</p>
+          <p className="text-sm text-muted-foreground">God Mode Level 9500 · Google Gemini 2.5 Flash / Pro</p>
         </div>
 
         {/* Stats row */}
