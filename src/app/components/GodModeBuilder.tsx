@@ -226,8 +226,8 @@ export function GodModeBuilder() {
   const [generatedPRD, setGeneratedPRD] = useState(() => localStorage.getItem("godmode_prior_prd") || "");
   const [showContextPanel, setShowContextPanel] = useState(true);
 
-  const { apiKey, setApiKey, clearApiKey, hasKey, maskedKey } = useApiKey();
-  const { stage, streamBuffer, finalOutput, scoreData, stages, error, isStreaming, callGeminiJSON, run, abort, reset } = useGodMode(apiKey);
+  const { apiKey, setApiKey, clearApiKey, hasKey, maskedKey, providerId } = useApiKey();
+  const { stage, streamBuffer, finalOutput, scoreData, stages, error, isStreaming, callGeminiJSON, run, abort, reset } = useGodMode(apiKey, providerId);
   const [isAutoFilling, setIsAutoFilling] = useState(false);
 
   const isIdle = stage === "idle";
@@ -787,7 +787,7 @@ ${displayOutput}
                       key={key}
                       label={key.replace(/([A-Z])/g, " $1").trim()}
                       score={dim.score}
-                      max={"noveltyIndex" === key || "godModeReadiness" === key ? 500 : 1000}
+                      max={1000}
                       critique={dim.critique}
                     />
                   ))}

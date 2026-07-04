@@ -42,6 +42,24 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/gemini/, ''),
         secure: true,
       },
+      '/api/claude': {
+        target: 'https://api.anthropic.com/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/claude/, ''),
+        secure: true,
+      },
+      '/api/openai': {
+        target: 'https://api.openai.com/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/openai/, ''),
+        secure: true,
+      },
+      '/api/deepseek': {
+        target: 'https://api.deepseek.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/deepseek/, ''),
+        secure: true,
+      },
     },
   },
 })

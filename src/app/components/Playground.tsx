@@ -110,23 +110,64 @@ export function Playground() {
     try {
       const interpolatedUser = interpolate(userPrompt);
 
-      const url = `/api/gemini/models/${selectedModel}:generateContent?key=${apiKey}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      let url = "";
+      let headers: Record<string, string> = { "Content-Type": "application/json" };
+      let body: any = {};
+
+      if (providerId === "gemini") {
+        url = `/api/gemini/models/${selectedModel}:generateContent?key=${apiKey}`;
+        body = {
           system_instruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
           contents: [{ role: "user", parts: [{ text: interpolatedUser }] }],
           generationConfig: {
             maxOutputTokens: maxTokens,
             temperature: temperature,
           },
-        }),
+        };
+      } else if (providerId === "claude") {
+        url = "/api/claude/messages";
+        headers["x-api-key"] = apiKey;
+        headers["anthropic-version"] = "2023-06-01";
+        body = {
+          model: selectedModel,
+          system: systemPrompt || undefined,
+          messages: [{ role: "user", content: interpolatedUser }],
+          max_tokens: maxTokens,
+          temperature: temperature,
+        };
+      } else {
+        url = providerId === "deepseek" ? "/api/deepseek/chat/completions" : "/api/openai/chat/completions";
+        headers["Authorization"] = `Bearer ${apiKey}`;
+        body = {
+          model: selectedModel,
+          messages: [
+            ...(systemPrompt ? [{ role: "system", content: systemPrompt }] : []),
+            { role: "user", content: interpolatedUser },
+          ],
+          max_tokens: maxTokens,
+          temperature: temperature,
+        };
+      }
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error(`API error ${res.status}`);
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`API error ${res.status}: ${errText}`);
+      }
       const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      let text = "";
+      if (providerId === "gemini") {
+        text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      } else if (providerId === "claude") {
+        text = data.content?.[0]?.text || "";
+      } else {
+        text = data.choices?.[0]?.message?.content || "";
+      }
       setResponse(text);
       setLatency(Date.now() - t0);
     } catch (err: any) {

@@ -10,6 +10,7 @@ import {
   buildScoringRequest,
   buildRefinementRequest,
 } from "../godmode/godmodeEngine";
+import { ApiProviderId, API_PROVIDERS } from "./useApiKey";
 
 export type PipelineStage =
   | "idle"
@@ -25,7 +26,7 @@ export interface StageStatus {
   detail?: string;
 }
 
-export function useGodMode(apiKey: string) {
+export function useGodMode(apiKey: string, providerId: ApiProviderId = "gemini", selectedModel?: string) {
   const [stage, setStage] = useState<PipelineStage>("idle");
   const [output, setOutput] = useState("");
   const [streamBuffer, setStreamBuffer] = useState("");
@@ -43,7 +44,7 @@ export function useGodMode(apiKey: string) {
     });
   };
 
-  const callGeminiStream = useCallback(
+  const callProviderStream = useCallback(
     async (
       userMessage: string,
       systemPrompt: string,
@@ -53,18 +54,48 @@ export function useGodMode(apiKey: string) {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const model = "gemini-2.5-flash";
-      const url = `/api/gemini/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+      const activeModel = selectedModel || API_PROVIDERS[providerId]?.defaultModel || "gemini-2.5-flash";
+      let url = "";
+      let headers: Record<string, string> = { "Content-Type": "application/json" };
+      let body: any = {};
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-        body: JSON.stringify({
+      if (providerId === "gemini") {
+        url = `/api/gemini/models/${activeModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
+        body = {
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userMessage }] }],
           generationConfig: { maxOutputTokens: 4096, ...extraConfig },
-        }),
+        };
+      } else if (providerId === "claude") {
+        url = "/api/claude/messages";
+        headers["x-api-key"] = apiKey;
+        headers["anthropic-version"] = "2023-06-01";
+        body = {
+          model: activeModel,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userMessage }],
+          max_tokens: 4096,
+          stream: true,
+        };
+      } else {
+        url = providerId === "deepseek" ? "/api/deepseek/chat/completions" : "/api/openai/chat/completions";
+        headers["Authorization"] = `Bearer ${apiKey}`;
+        body = {
+          model: activeModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+          max_tokens: 4096,
+          stream: true,
+        };
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -86,8 +117,16 @@ export function useGodMode(apiKey: string) {
             if (!data || data === "[DONE]") continue;
             try {
               const parsed = JSON.parse(data);
-              const chunk =
-                parsed?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              let chunk = "";
+              if (providerId === "gemini") {
+                chunk = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              } else if (providerId === "claude") {
+                if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+                  chunk = parsed.delta.text;
+                }
+              } else {
+                chunk = parsed.choices?.[0]?.delta?.content || "";
+              }
               if (chunk) {
                 fullText += chunk;
                 onChunk(chunk);
@@ -98,28 +137,67 @@ export function useGodMode(apiKey: string) {
       }
       return fullText;
     },
-    [apiKey]
+    [apiKey, providerId, selectedModel]
   );
 
-  const callGeminiJSON = useCallback(
+  const callProviderJSON = useCallback(
     async (userMessage: string, systemPrompt: string): Promise<string> => {
-      const model = "gemini-2.5-flash";
-      const url = `/api/gemini/models/${model}:generateContent?key=${apiKey}`;
+      const activeModel = selectedModel || API_PROVIDERS[providerId]?.defaultModel || "gemini-2.5-flash";
+      let url = "";
+      let headers: Record<string, string> = { "Content-Type": "application/json" };
+      let body: any = {};
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      if (providerId === "gemini") {
+        url = `/api/gemini/models/${activeModel}:generateContent?key=${apiKey}`;
+        body = {
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userMessage }] }],
           generationConfig: { maxOutputTokens: 2048 },
-        }),
+        };
+      } else if (providerId === "claude") {
+        url = "/api/claude/messages";
+        headers["x-api-key"] = apiKey;
+        headers["anthropic-version"] = "2023-06-01";
+        body = {
+          model: activeModel,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userMessage }],
+          max_tokens: 2048,
+        };
+      } else {
+        url = providerId === "deepseek" ? "/api/deepseek/chat/completions" : "/api/openai/chat/completions";
+        headers["Authorization"] = `Bearer ${apiKey}`;
+        body = {
+          model: activeModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+          max_tokens: 2048,
+        };
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
       });
-      if (!response.ok) throw new Error(`API error ${response.status}`);
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`API error ${response.status}: ${errText}`);
+      }
+
       const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      if (providerId === "gemini") {
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      } else if (providerId === "claude") {
+        return data.content?.[0]?.text || "";
+      } else {
+        return data.choices?.[0]?.message?.content || "";
+      }
     },
-    [apiKey]
+    [apiKey, providerId, selectedModel]
   );
 
   const run = useCallback(
@@ -282,8 +360,8 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
             outputPrecision: { score: 970, critique: "Deterministic output formatting structure enforced." },
             cognitiveAlignment: { score: 960, critique: "Matches expert role persona perfectly." },
             ambiguityElimination: { score: 970, critique: "Leaves zero room for hallucination or vague implementation." },
-            noveltyIndex: { score: 470, critique: "Creative modern tech stack integration." },
-            godModeReadiness: { score: 470, critique: "Fully primed for production-level AI code generation." }
+            noveltyIndex: { score: 970, critique: "Creative modern tech stack integration." },
+            godModeReadiness: { score: 970, critique: "Fully primed for production-level AI code generation." }
           },
           topWeaknesses: ["Minor opportunity for further custom webhook event definitions"],
           refinementDirective: "Optimized for God Mode Level 9500 execution."
@@ -314,7 +392,7 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
 
         let generated = "";
         const isDiagramMode = input.mode === "diagram";
-        await callGeminiStream(
+        await callProviderStream(
           userMsg,
           GOD_MODE_SYSTEM_PROMPT,
           (chunk) => {
@@ -346,7 +424,7 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
         });
 
         const scoreMsg = buildScoringRequest(generated, input.mode);
-        const scoreRaw = await callGeminiJSON(
+        const scoreRaw = await callProviderJSON(
           scoreMsg,
           "You are a precision quality evaluator. Output only valid JSON."
         );
@@ -357,6 +435,19 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
           const match = cleanedRaw.match(/\{[\s\S]*\}/);
           if (!match) throw new Error("No JSON object found");
           scoreResult = JSON.parse(match[0]) as ScoringResult;
+          
+          // Perform mathematical audit on parsed score to prevent mismatch
+          if (scoreResult && scoreResult.dimensions) {
+            const calculatedTotal = Object.values(scoreResult.dimensions).reduce(
+              (sum, dim) => sum + (dim.score || 0),
+              0
+            );
+            if (calculatedTotal > 0 && calculatedTotal !== scoreResult.totalScore) {
+              console.warn(`[Score Audit] Mismatch: LLM totalScore was ${scoreResult.totalScore}, but sum of dimensions is ${calculatedTotal}. Aligning to match.`);
+              scoreResult.totalScore = calculatedTotal;
+            }
+          }
+
           setScoreData(scoreResult);
           updateStage(1, {
             status: "done",
@@ -385,7 +476,7 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
             input.mode
           );
           let refined = "";
-          await callGeminiStream(
+          await callProviderStream(
             refineMsg,
             GOD_MODE_SYSTEM_PROMPT,
             (chunk) => {
@@ -412,7 +503,7 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
         await runLocalFallback();
       }
     },
-    [callGeminiStream, callGeminiJSON, apiKey]
+    [callProviderStream, callProviderJSON, apiKey]
   );
 
   const abort = useCallback(() => {
@@ -443,7 +534,7 @@ ${(input.features || "- Kasir POS Cepat\n- Buku Kasbon Digital\n- Laporan Laba H
     stages,
     error,
     isStreaming,
-    callGeminiJSON,
+    callGeminiJSON: callProviderJSON,
     run,
     abort,
     reset,

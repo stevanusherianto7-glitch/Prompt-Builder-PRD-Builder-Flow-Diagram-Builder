@@ -268,8 +268,8 @@ Output ONLY a JSON object with this exact structure:
     "outputPrecision": { "score": <number 0-1000>, "critique": "<one sentence>" },
     "cognitiveAlignment": { "score": <number 0-1000>, "critique": "<one sentence>" },
     "ambiguityElimination": { "score": <number 0-1000>, "critique": "<one sentence>" },
-    "noveltyIndex": { "score": <number 0-500>, "critique": "<one sentence>" },
-    "godModeReadiness": { "score": <number 0-500>, "critique": "<one sentence>" }
+    "noveltyIndex": { "score": <number 0-1000>, "critique": "<one sentence>" },
+    "godModeReadiness": { "score": <number 0-1000>, "critique": "<one sentence>" }
   },
   "topWeaknesses": ["<weakness 1>", "<weakness 2>", "<weakness 3>"],
   "refinementDirective": "<one precise instruction to improve the output>"
